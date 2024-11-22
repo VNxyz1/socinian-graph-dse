@@ -1,0 +1,48 @@
+
+services:
+  neo4j:
+    image: neo4j:5.24.2-community
+    volumes:
+      - /$HOME/neo4j/logs:/logs
+      - /$HOME/neo4j/config:/config
+      - /$HOME/neo4j/data:/data
+      - /$HOME/neo4j/plugins:/plugins
+    environment:
+      NEO4J_server_memory_pagecache_size: "512M"
+      NEO4J_server_memory_heap_max__size: "512M"
+      NEO4J_AUTH: "neo4j/pass1234"
+      NEO4JLABS_PLUGINS: '["apoc", "n10s"]'
+      NEO4J_server_unmanaged__extension__classes=n10s.endpoint: "/rdf"
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    restart: unless-stopped
+    networks:
+      - intern
+
+
+  app:
+    build:
+      context: ./
+    depends_on:
+      - neo4j
+    environment:
+      NEO4J_HOST: neo4j://neo4j:7687
+      HTTPS_SERVER_PORT: 8443
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: pass1234
+    ports:
+      - "8080:8443"
+    networks:
+      - intern
+
+
+    # TODO: Es fehlt ein nginx reverse proxy, welcher das http protokoll handled, und die app, sowie die db nach außen exposed.
+
+networks:
+  intern:
+    driver: bridge
+
+
+volumes:
+  db_data:
