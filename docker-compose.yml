@@ -13,6 +13,7 @@ services:
       NEO4J_AUTH: "neo4j/pass1234"
       NEO4JLABS_PLUGINS: '["apoc", "n10s"]'
       NEO4J_server_unmanaged__extension__classes=n10s.endpoint: "/rdf"
+      NEO4J_server_default__advertised__address: "localhost/neo4j"
     ports:
       - "7474:7474"
       - "7687:7687"
@@ -31,13 +32,24 @@ services:
       HTTPS_SERVER_PORT: 8443
       NEO4J_USERNAME: neo4j
       NEO4J_PASSWORD: pass1234
-    ports:
-      - "8080:8443"
     networks:
       - intern
 
 
     # TODO: Es fehlt ein nginx reverse proxy, welcher das http protokoll handled, und die app, sowie die db nach außen exposed.
+  proxy:
+    image: nginx:1.25.3-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/etc/config/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - neo4j
+      - app
+    networks:
+      - intern
 
 networks:
   intern:
